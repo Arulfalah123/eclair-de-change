@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ÉCLAIR DE CHANCE | Katalog Eksklusif</title>
     
     <!-- Tailwind CSS -->
@@ -39,7 +39,13 @@
             background-color: #0a0a0a;
             color: #f4f4f4;
             cursor: none;
-            width: 100vw;
+            max-width: 100%;
+        }
+
+        /* Disable custom cursor on touch devices for better mobile experience */
+        @media (hover: none) and (pointer: coarse) {
+            body { cursor: auto; }
+            .cursor-dot, .cursor-outline { display: none !important; }
         }
 
         /* View State Management */
@@ -147,7 +153,7 @@
         .product-img-wrapper {
             overflow: hidden;
             position: relative;
-            background-color: #1a1a1a; /* Fallback color jika gambar gagal render */
+            background-color: #1a1a1a;
         }
         
         .product-img {
@@ -169,23 +175,36 @@
             position: fixed;
             bottom: 24px;
             right: 24px;
+            left: 24px;
+            md:left: auto;
             z-index: 50;
             display: flex;
             flex-direction: column;
             gap: 10px;
+            pointer-events: none;
         }
         .toast {
             background: white;
             color: black;
-            padding: 16px 24px;
+            padding: 16px 20px;
             font-weight: 600;
             text-transform: uppercase;
-            font-size: 0.875rem;
+            font-size: 0.8rem;
             transform: translateX(120%);
             transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             border-left: 4px solid black;
+            pointer-events: auto;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
-        .toast.show { transform: translateX(0); }
+        @media (max-width: 768px) {
+            .toast {
+                transform: translateY(120%);
+            }
+            .toast.show { transform: translateY(0); }
+        }
+        @media (min-width: 769px) {
+            .toast.show { transform: translateX(0); }
+        }
     </style>
 </head>
 <body class="antialiased selection:bg-white selection:text-black home-active">
@@ -196,33 +215,50 @@
 
     <!-- Navigation -->
     <nav class="fixed w-full top-0 z-40 bg-brand/90 backdrop-blur-md border-b border-white/10 transition-all duration-300 py-4" id="navbar">
-        <div class="max-w-[1440px] mx-auto px-6 flex justify-between items-center">
-            <div class="text-sm font-semibold tracking-widest uppercase hidden md:block">
+        <div class="max-w-[1440px] mx-auto px-4 md:px-6 flex justify-between items-center">
+            <div class="text-sm font-semibold tracking-widest uppercase hidden md:block w-1/3">
                 <button onclick="switchView('catalog'); setTimeout(() => document.getElementById('about').scrollIntoView({behavior: 'smooth'}), 100);" class="hover:text-gray-400 transition-colors clickable uppercase">Tentang</button>
             </div>
             
-            <button onclick="switchView('home')" class="font-display text-2xl md:text-4xl tracking-widest text-white uppercase text-center absolute left-1/2 -translate-x-1/2 clickable">
+            <button onclick="switchView('home')" class="font-display text-2xl md:text-4xl tracking-widest text-white uppercase text-center md:absolute md:left-1/2 md:-translate-x-1/2 clickable whitespace-nowrap">
                 Éclair de Chance
             </button>
 
-            <div class="flex items-center gap-6">
+            <div class="flex items-center justify-end gap-4 md:gap-6 w-auto md:w-1/3">
                 <button onclick="switchView('catalog')" class="text-sm font-semibold tracking-widest uppercase hover:text-gray-400 transition-colors hidden md:block clickable">
                     Katalog
                 </button>
-                <button onclick="toggleCart()" class="flex items-center gap-2 text-sm font-semibold tracking-widest uppercase hover:text-gray-400 transition-colors group clickable">
+                <button onclick="toggleCart()" class="flex items-center gap-2 text-sm md:text-sm font-semibold tracking-widest uppercase hover:text-gray-400 transition-colors group clickable">
                     <span id="cart-count">CART [0]</span>
                 </button>
                 <!-- Mobile Menu Button -->
-                <button class="md:hidden text-white clickable">
+                <button onclick="toggleMobileMenu()" class="md:hidden text-white clickable">
                     <i data-lucide="menu" class="w-6 h-6"></i>
                 </button>
             </div>
         </div>
     </nav>
 
+    <!-- Mobile Menu Overlay & Sidebar -->
+    <div id="mobile-menu-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[45] hidden opacity-0 transition-opacity duration-300 clickable" onclick="toggleMobileMenu()"></div>
+    <div id="mobile-menu-sidebar" class="fixed top-0 left-0 h-full w-[80%] max-w-[300px] bg-[#0a0a0a] border-r border-white/10 z-50 transform -translate-x-full transition-transform duration-300 flex flex-col">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center">
+            <h2 class="font-display text-2xl uppercase tracking-widest text-white">Menu</h2>
+            <button onclick="toggleMobileMenu()" class="text-gray-400 hover:text-white transition-colors clickable">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+        <div class="flex flex-col gap-6 p-6 font-mono text-lg uppercase tracking-widest">
+            <button onclick="toggleMobileMenu(); switchView('home');" class="text-left text-white hover:text-gray-400 transition-colors py-2 border-b border-white/5">Beranda</button>
+            <button onclick="toggleMobileMenu(); switchView('catalog');" class="text-left text-white hover:text-gray-400 transition-colors py-2 border-b border-white/5">Katalog</button>
+            <button onclick="toggleMobileMenu(); switchView('catalog'); setTimeout(() => document.getElementById('about').scrollIntoView({behavior: 'smooth'}), 100);" class="text-left text-white hover:text-gray-400 transition-colors py-2 border-b border-white/5">Tentang</button>
+        </div>
+    </div>
+
     <!-- VIEW 1: HOME SECTION (1 Screen Locked) -->
     <div id="home-view" class="view-section active">
-        <header class="relative h-screen w-full flex items-center justify-center overflow-hidden">
+        <!-- Using 100dvh for better mobile viewport handling -->
+        <header class="relative h-[100dvh] w-full flex items-center justify-center overflow-hidden">
             <div class="absolute inset-0 z-0 bg-[#1a1a1a]">
                 <!-- Gambar Hero yang Diperbarui: Pria Kasual (Kaos Polos Gelap/Konsep Streetwear) -->
                 <img src="https://images.unsplash.com/photo-1492288991661-058aa541ff43?auto=format&fit=crop&q=80&w=1920" 
@@ -232,14 +268,14 @@
                 <div class="absolute inset-0 bg-gradient-to-b from-brand/20 via-brand/50 to-brand"></div>
             </div>
             
-            <div class="relative z-10 text-center px-4">
-                <h1 class="font-display text-6xl md:text-9xl uppercase tracking-[0.1em] text-white leading-none mb-6">
+            <div class="relative z-10 text-center px-4 w-full">
+                <h1 class="font-display text-5xl sm:text-6xl md:text-9xl uppercase tracking-[0.1em] text-white leading-none mb-4 md:mb-6 mt-10">
                     Drop<br>001
                 </h1>
-                <p class="font-sans text-sm md:text-base tracking-[0.3em] uppercase text-gray-300 mb-10">
+                <p class="font-sans text-xs sm:text-sm md:text-base tracking-[0.2em] md:tracking-[0.3em] uppercase text-gray-300 mb-8 md:mb-10">
                     Koleksi Eksklusif. Ketersediaan Terbatas.
                 </p>
-                <button onclick="switchView('catalog')" class="clickable inline-block border border-white text-white px-10 py-4 uppercase tracking-[0.2em] font-semibold hover:bg-white hover:text-black transition-colors duration-300">
+                <button onclick="switchView('catalog')" class="clickable inline-block border border-white text-white px-8 md:px-10 py-3 md:py-4 text-sm md:text-base uppercase tracking-[0.2em] font-semibold hover:bg-white hover:text-black transition-colors duration-300 w-[80%] md:w-auto">
                     Masuk ke Katalog
                 </button>
             </div>
@@ -249,50 +285,50 @@
     <!-- VIEW 2: CATALOG SECTION (Scrollable) -->
     <div id="catalog-view" class="view-section">
         <!-- Spacer for fixed navbar -->
-        <div class="h-20"></div>
+        <div class="h-16 md:h-20"></div>
 
         <!-- Marquee Banner -->
         <div class="marquee-container">
-            <div class="marquee-content font-display text-2xl md:text-3xl tracking-widest text-white/80">
+            <div class="marquee-content font-display text-xl md:text-3xl tracking-widest text-white/80">
                 EKSKLUSIF  001 &nbsp; // &nbsp; PENGIRIMAN SELURUH DUNIA &nbsp; // &nbsp; STOK SANGAT TERBATAS &nbsp; // &nbsp; ÉCLAIR DE CHANCE &nbsp; // &nbsp; EKSKLUSIF DROP 001 &nbsp; // &nbsp; PENGIRIMAN SELURUH DUNIA &nbsp; // &nbsp; STOK SANGAT TERBATAS &nbsp; // &nbsp; ÉCLAIR DE CHANCE &nbsp; // &nbsp;
             </div>
         </div>
 
         <!-- Exclusive Catalog Section -->
-        <section id="katalog" class="py-20 px-6 md:px-12 max-w-[1440px] mx-auto">
-            <div class="flex flex-col md:flex-row justify-between items-end border-b border-white/20 pb-6 mb-12 reveal">
+        <section id="katalog" class="py-12 md:py-20 px-4 sm:px-6 md:px-12 max-w-[1440px] mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-white/20 pb-4 md:pb-6 mb-8 md:mb-12 reveal">
                 <div>
-                    <h2 class="font-display text-4xl md:text-6xl uppercase tracking-wider">Katalog</h2>
-                    <p class="text-gray-400 mt-2 font-mono text-sm">MUSIM 1 / ARSIP UTAMA</p>
+                    <h2 class="font-display text-3xl md:text-6xl uppercase tracking-wider">Katalog</h2>
+                    <p class="text-gray-400 mt-1 md:mt-2 font-mono text-xs md:text-sm">MUSIM 1 / ARSIP UTAMA</p>
                 </div>
-                <div class="mt-4 md:mt-0 text-sm font-mono text-gray-400">
+                <div class="mt-4 md:mt-0 text-xs md:text-sm font-mono text-gray-400">
                     MENAMPILKAN 6 ITEM
                 </div>
             </div>
 
             <!-- Product Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-16 gap-x-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-12 md:gap-y-16 gap-x-6 md:gap-x-8">
                 
                 <!-- Product 1 -->
                 <div class="product-card group reveal cursor-pointer">
-                    <div class="product-img-wrapper aspect-[3/4] mb-6 relative flex items-center justify-center">
+                    <div class="product-img-wrapper aspect-[3/4] mb-4 md:mb-6 relative flex items-center justify-center">
                         <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&q=80&w=800" 
                              onerror="this.style.opacity='0'"
                              alt="Jaket Bomber Thunder" 
-                             class="product-img w-full h-full object-cover mix-blend-luminosity hover:mix-blend-normal absolute inset-0">
+                             class="product-img w-full h-full object-cover md:mix-blend-luminosity md:hover:mix-blend-normal absolute inset-0">
                         
-                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <button onclick="addToCart('Jaket Bomber \'Thunder\'', 2500000)" class="clickable bg-white text-black font-bold uppercase tracking-widest px-6 py-3 text-sm hover:scale-105 transition-transform">
+                        <div class="absolute inset-0 bg-black/20 md:bg-black/40 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-end md:items-center justify-center pb-4 md:pb-0">
+                            <button onclick="addToCart('Jaket Bomber \'Thunder\'', 2500000)" class="clickable bg-white text-black font-bold uppercase tracking-widest px-6 py-3 text-xs md:text-sm hover:scale-105 transition-transform w-[90%] md:w-auto shadow-lg md:shadow-none">
                                 Tambah
                             </button>
                         </div>
                     </div>
-                    <div class="flex justify-between items-start font-mono uppercase text-sm">
-                        <div>
-                            <h3 class="font-bold text-white mb-1">Jaket Bomber 'Thunder'</h3>
-                            <p class="text-gray-500">Hitam / Kulit Sintetis</p>
+                    <div class="flex justify-between items-start font-mono uppercase text-xs md:text-sm">
+                        <div class="w-2/3">
+                            <h3 class="font-bold text-white mb-1 truncate">Jaket Bomber 'Thunder'</h3>
+                            <p class="text-gray-500 text-[10px] md:text-xs">Hitam / Kulit Sintetis</p>
                         </div>
-                        <div class="text-right">
+                        <div class="text-right w-1/3">
                             <span class="block text-white">Rp 2.500.000</span>
                         </div>
                     </div>
@@ -300,23 +336,23 @@
 
                 <!-- Product 2 -->
                 <div class="product-card group reveal cursor-pointer delay-100">
-                    <div class="product-img-wrapper aspect-[3/4] mb-6 relative">
+                    <div class="product-img-wrapper aspect-[3/4] mb-4 md:mb-6 relative">
                         <img src="https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=800" 
                              onerror="this.style.opacity='0'"
                              alt="Kaos Oversize Lucky Strike" 
-                             class="product-img w-full h-full object-cover mix-blend-luminosity hover:mix-blend-normal">
-                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <button onclick="addToCart('Kaos Oversize \'Lucky\'', 850000)" class="clickable bg-white text-black font-bold uppercase tracking-widest px-6 py-3 text-sm hover:scale-105 transition-transform">
+                             class="product-img w-full h-full object-cover md:mix-blend-luminosity md:hover:mix-blend-normal absolute inset-0">
+                        <div class="absolute inset-0 bg-black/20 md:bg-black/40 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-end md:items-center justify-center pb-4 md:pb-0">
+                            <button onclick="addToCart('Kaos Oversize \'Lucky\'', 850000)" class="clickable bg-white text-black font-bold uppercase tracking-widest px-6 py-3 text-xs md:text-sm hover:scale-105 transition-transform w-[90%] md:w-auto shadow-lg md:shadow-none">
                                 Tambah
                             </button>
                         </div>
                     </div>
-                    <div class="flex justify-between items-start font-mono uppercase text-sm">
-                        <div>
-                            <h3 class="font-bold text-white mb-1">Kaos 'Lucky Strike'</h3>
-                            <p class="text-gray-500">Hitam / Katun Berat</p>
+                    <div class="flex justify-between items-start font-mono uppercase text-xs md:text-sm">
+                        <div class="w-2/3">
+                            <h3 class="font-bold text-white mb-1 truncate">Kaos 'Lucky Strike'</h3>
+                            <p class="text-gray-500 text-[10px] md:text-xs">Hitam / Katun Berat</p>
                         </div>
-                        <div class="text-right">
+                        <div class="text-right w-1/3">
                             <span class="block text-white">Rp 850.000</span>
                         </div>
                     </div>
@@ -324,23 +360,23 @@
 
                 <!-- Product 3 -->
                 <div class="product-card group reveal cursor-pointer delay-200">
-                    <div class="product-img-wrapper aspect-[3/4] mb-6 relative">
+                    <div class="product-img-wrapper aspect-[3/4] mb-4 md:mb-6 relative">
                         <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&q=80&w=800" 
                              onerror="this.style.opacity='0'"
                              alt="Celana Kargo Storm" 
-                             class="product-img w-full h-full object-cover mix-blend-luminosity hover:mix-blend-normal">
-                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <button onclick="addToCart('Celana Kargo \'Storm\'', 1200000)" class="clickable bg-white text-black font-bold uppercase tracking-widest px-6 py-3 text-sm hover:scale-105 transition-transform">
+                             class="product-img w-full h-full object-cover md:mix-blend-luminosity md:hover:mix-blend-normal absolute inset-0">
+                        <div class="absolute inset-0 bg-black/20 md:bg-black/40 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-end md:items-center justify-center pb-4 md:pb-0">
+                            <button onclick="addToCart('Celana Kargo \'Storm\'', 1200000)" class="clickable bg-white text-black font-bold uppercase tracking-widest px-6 py-3 text-xs md:text-sm hover:scale-105 transition-transform w-[90%] md:w-auto shadow-lg md:shadow-none">
                                 Tambah
                             </button>
                         </div>
                     </div>
-                    <div class="flex justify-between items-start font-mono uppercase text-sm">
-                        <div>
-                            <h3 class="font-bold text-white mb-1">Celana Kargo 'Storm'</h3>
-                            <p class="text-gray-500">Hitam / Parasut</p>
+                    <div class="flex justify-between items-start font-mono uppercase text-xs md:text-sm">
+                        <div class="w-2/3">
+                            <h3 class="font-bold text-white mb-1 truncate">Celana Kargo 'Storm'</h3>
+                            <p class="text-gray-500 text-[10px] md:text-xs">Hitam / Parasut</p>
                         </div>
-                        <div class="text-right">
+                        <div class="text-right w-1/3">
                             <span class="block text-white">Rp 1.200.000</span>
                         </div>
                     </div>
@@ -348,22 +384,22 @@
 
                 <!-- Product 4 (SOLD OUT STATE) -->
                 <div class="product-card reveal cursor-not-allowed opacity-60">
-                    <div class="product-img-wrapper aspect-[3/4] mb-6 relative">
+                    <div class="product-img-wrapper aspect-[3/4] mb-4 md:mb-6 relative">
                         <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800" 
                              onerror="this.style.opacity='0'"
                              alt="Hoodie Eclipse" 
-                             class="product-img w-full h-full object-cover grayscale">
+                             class="product-img w-full h-full object-cover grayscale absolute inset-0">
                         
                         <div class="absolute inset-0 bg-black/20 flex flex-col items-center justify-center backdrop-blur-[2px]">
-                            <span class="font-display text-4xl text-white tracking-widest rotate-[-15deg] border-4 border-white px-4 py-1 uppercase">HABIS</span>
+                            <span class="font-display text-3xl md:text-4xl text-white tracking-widest rotate-[-15deg] border-4 border-white px-4 py-1 uppercase">HABIS</span>
                         </div>
                     </div>
-                    <div class="flex justify-between items-start font-mono uppercase text-sm">
-                        <div>
-                            <h3 class="font-bold text-white mb-1 line-through">Hoodie 'Eclipse'</h3>
-                            <p class="text-gray-500">Hitam / Fleece Tebal</p>
+                    <div class="flex justify-between items-start font-mono uppercase text-xs md:text-sm">
+                        <div class="w-2/3">
+                            <h3 class="font-bold text-white mb-1 line-through truncate">Hoodie 'Eclipse'</h3>
+                            <p class="text-gray-500 text-[10px] md:text-xs">Hitam / Fleece Tebal</p>
                         </div>
-                        <div class="text-right">
+                        <div class="text-right w-1/3">
                             <span class="block text-gray-500">Rp 1.500.000</span>
                         </div>
                     </div>
@@ -371,23 +407,23 @@
 
                 <!-- Product 5 -->
                 <div class="product-card group reveal cursor-pointer delay-100">
-                    <div class="product-img-wrapper aspect-[3/4] mb-6 relative">
+                    <div class="product-img-wrapper aspect-[3/4] mb-4 md:mb-6 relative">
                         <img src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&q=80&w=800" 
                              onerror="this.style.opacity='0'"
                              alt="Kacamata Hitam Volt" 
-                             class="product-img w-full h-full object-cover mix-blend-luminosity hover:mix-blend-normal">
-                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <button onclick="addToCart('Kacamata \'Volt\'', 1800000)" class="clickable bg-white text-black font-bold uppercase tracking-widest px-6 py-3 text-sm hover:scale-105 transition-transform">
+                             class="product-img w-full h-full object-cover md:mix-blend-luminosity md:hover:mix-blend-normal absolute inset-0">
+                        <div class="absolute inset-0 bg-black/20 md:bg-black/40 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-end md:items-center justify-center pb-4 md:pb-0">
+                            <button onclick="addToCart('Kacamata \'Volt\'', 1800000)" class="clickable bg-white text-black font-bold uppercase tracking-widest px-6 py-3 text-xs md:text-sm hover:scale-105 transition-transform w-[90%] md:w-auto shadow-lg md:shadow-none">
                                 Tambah
                             </button>
                         </div>
                     </div>
-                    <div class="flex justify-between items-start font-mono uppercase text-sm">
-                        <div>
-                            <h3 class="font-bold text-white mb-1">Kacamata 'Volt'</h3>
-                            <p class="text-gray-500">Hitam / Asetat</p>
+                    <div class="flex justify-between items-start font-mono uppercase text-xs md:text-sm">
+                        <div class="w-2/3">
+                            <h3 class="font-bold text-white mb-1 truncate">Kacamata 'Volt'</h3>
+                            <p class="text-gray-500 text-[10px] md:text-xs">Hitam / Asetat</p>
                         </div>
-                        <div class="text-right">
+                        <div class="text-right w-1/3">
                             <span class="block text-white">Rp 1.800.000</span>
                         </div>
                     </div>
@@ -395,23 +431,23 @@
 
                 <!-- Product 6 -->
                 <div class="product-card group reveal cursor-pointer delay-200">
-                    <div class="product-img-wrapper aspect-[3/4] mb-6 relative">
+                    <div class="product-img-wrapper aspect-[3/4] mb-4 md:mb-6 relative">
                         <img src="https://images.unsplash.com/photo-1576871337622-98d48d1cf531?auto=format&fit=crop&q=80&w=800" 
                              onerror="this.style.opacity='0'"
                              alt="Topi Beanie Chance" 
-                             class="product-img w-full h-full object-cover mix-blend-luminosity hover:mix-blend-normal">
-                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <button onclick="addToCart('Beanie \'Chance\'', 450000)" class="clickable bg-white text-black font-bold uppercase tracking-widest px-6 py-3 text-sm hover:scale-105 transition-transform">
+                             class="product-img w-full h-full object-cover md:mix-blend-luminosity md:hover:mix-blend-normal absolute inset-0">
+                        <div class="absolute inset-0 bg-black/20 md:bg-black/40 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-end md:items-center justify-center pb-4 md:pb-0">
+                            <button onclick="addToCart('Beanie \'Chance\'', 450000)" class="clickable bg-white text-black font-bold uppercase tracking-widest px-6 py-3 text-xs md:text-sm hover:scale-105 transition-transform w-[90%] md:w-auto shadow-lg md:shadow-none">
                                 Tambah
                             </button>
                         </div>
                     </div>
-                    <div class="flex justify-between items-start font-mono uppercase text-sm">
-                        <div>
-                            <h3 class="font-bold text-white mb-1">Beanie 'Chance'</h3>
-                            <p class="text-gray-500">Hitam / Rajut</p>
+                    <div class="flex justify-between items-start font-mono uppercase text-xs md:text-sm">
+                        <div class="w-2/3">
+                            <h3 class="font-bold text-white mb-1 truncate">Beanie 'Chance'</h3>
+                            <p class="text-gray-500 text-[10px] md:text-xs">Hitam / Rajut</p>
                         </div>
-                        <div class="text-right">
+                        <div class="text-right w-1/3">
                             <span class="block text-white">Rp 450.000</span>
                         </div>
                     </div>
@@ -421,29 +457,29 @@
         </section>
 
         <!-- Information / Footer Area -->
-        <footer id="about" class="border-t border-white/10 mt-10 reveal">
-            <div class="max-w-[1440px] mx-auto px-6 py-20 flex flex-col md:flex-row justify-between items-start gap-12">
+        <footer id="about" class="border-t border-white/10 mt-6 md:mt-10 reveal">
+            <div class="max-w-[1440px] mx-auto px-4 md:px-6 py-12 md:py-20 flex flex-col md:flex-row justify-between items-start gap-8 md:gap-12">
                 
                 <div class="md:w-1/2">
-                    <h2 class="font-display text-4xl uppercase mb-6">Tentang Éclair</h2>
-                    <p class="text-gray-400 font-sans leading-relaxed max-w-md">
+                    <h2 class="font-display text-3xl md:text-4xl uppercase mb-4 md:mb-6">Tentang Éclair</h2>
+                    <p class="text-gray-400 font-sans text-sm md:text-base leading-relaxed max-w-md">
                         Lahir dari konsep kilatan keberuntungan. Kami menciptakan pakaian yang berbicara tanpa perlu berteriak. Setiap potongan dibuat dengan presisi, diproduksi dalam jumlah yang sangat terbatas untuk menjaga eksklusivitas pemakainya.
                     </p>
                 </div>
 
                 <div class="md:w-1/2 w-full">
-                    <h3 class="font-mono text-sm font-bold uppercase tracking-widest mb-6">Akses Eksklusif</h3>
-                    <p class="text-gray-400 text-sm mb-4">Berlangganan untuk menerima kata sandi rahasia sebelum rilis katalog berikutnya.</p>
-                    <form onsubmit="event.preventDefault(); showToast('Berhasil mendaftar ke akses VIP.');" class="flex w-full max-w-md border-b border-white/30 pb-2 focus-within:border-white transition-colors">
-                        <input type="email" placeholder="ALAMAT EMAIL" required class="bg-transparent outline-none w-full text-white placeholder-gray-600 font-mono text-sm clickable">
-                        <button type="submit" class="font-mono text-sm uppercase tracking-widest hover:text-gray-400 transition-colors clickable">Gabung</button>
+                    <h3 class="font-mono text-sm font-bold uppercase tracking-widest mb-4 md:mb-6">Akses Eksklusif</h3>
+                    <p class="text-gray-400 text-xs md:text-sm mb-4">Berlangganan untuk menerima kata sandi rahasia sebelum rilis katalog berikutnya.</p>
+                    <form onsubmit="event.preventDefault(); showToast('Berhasil mendaftar ke akses VIP.');" class="flex flex-col sm:flex-row w-full max-w-md border-b border-white/30 pb-2 focus-within:border-white transition-colors gap-3 sm:gap-0">
+                        <input type="email" placeholder="ALAMAT EMAIL" required class="bg-transparent outline-none w-full text-white placeholder-gray-600 font-mono text-xs md:text-sm clickable pb-2 sm:pb-0">
+                        <button type="submit" class="font-mono text-xs md:text-sm uppercase tracking-widest hover:text-gray-400 transition-colors clickable text-left sm:text-right">Gabung</button>
                     </form>
                 </div>
 
             </div>
 
-            <div class="border-t border-white/10 py-6 text-center">
-                <p class="font-mono text-xs text-gray-600 uppercase tracking-widest">
+            <div class="border-t border-white/10 py-6 text-center px-4">
+                <p class="font-mono text-[10px] md:text-xs text-gray-600 uppercase tracking-widest">
                     &copy; 2026 Éclair de Chance. Hak Cipta Dilindungi.
                 </p>
             </div>
@@ -453,24 +489,24 @@
     <!-- Cart Sidebar & Overlay -->
     <div id="cart-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[45] hidden opacity-0 transition-opacity duration-300 clickable" onclick="toggleCart()"></div>
 
-    <div id="cart-sidebar" class="fixed top-0 right-0 h-full w-full md:w-[400px] bg-[#0a0a0a] border-l border-white/10 z-50 transform translate-x-full transition-transform duration-300 flex flex-col">
-        <div class="p-6 border-b border-white/10 flex justify-between items-center">
-            <h2 class="font-display text-2xl uppercase tracking-widest text-white">Keranjang</h2>
+    <div id="cart-sidebar" class="fixed top-0 right-0 h-full w-[85%] md:w-[400px] bg-[#0a0a0a] border-l border-white/10 z-50 transform translate-x-full transition-transform duration-300 flex flex-col">
+        <div class="p-4 md:p-6 border-b border-white/10 flex justify-between items-center">
+            <h2 class="font-display text-xl md:text-2xl uppercase tracking-widest text-white">Keranjang</h2>
             <button onclick="toggleCart()" class="text-gray-400 hover:text-white transition-colors clickable">
                 <i data-lucide="x" class="w-6 h-6"></i>
             </button>
         </div>
         
-        <div id="cart-items-container" class="flex-1 overflow-y-auto p-6 flex flex-col gap-6 custom-scrollbar">
-            <div class="text-gray-500 font-mono text-sm uppercase text-center mt-10">Keranjang masih kosong</div>
+        <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4 md:gap-6 custom-scrollbar">
+            <div class="text-gray-500 font-mono text-xs md:text-sm uppercase text-center mt-10">Keranjang masih kosong</div>
         </div>
 
-        <div class="p-6 border-t border-white/10">
-            <div class="flex justify-between items-center mb-6 font-mono text-sm uppercase text-white">
+        <div class="p-4 md:p-6 border-t border-white/10">
+            <div class="flex justify-between items-center mb-4 md:mb-6 font-mono text-xs md:text-sm uppercase text-white">
                 <span>Total</span>
                 <span id="cart-total">Rp 0</span>
             </div>
-            <button onclick="alert('Ini adalah versi Demo. Fitur checkout akan segera hadir!'); toggleCart();" class="w-full bg-white text-black font-bold uppercase tracking-widest py-4 text-sm hover:bg-gray-200 transition-colors clickable">
+            <button onclick="alert('Ini adalah versi Demo. Fitur checkout akan segera hadir!'); toggleCart();" class="w-full bg-white text-black font-bold uppercase tracking-widest py-3 md:py-4 text-xs md:text-sm hover:bg-gray-200 transition-colors clickable">
                 Proses Checkout
             </button>
         </div>
@@ -518,32 +554,54 @@
         }
 
         // ----------------------------------------
+        // MOBILE MENU LOGIC
+        // ----------------------------------------
+        const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+        const mobileMenuSidebar = document.getElementById('mobile-menu-sidebar');
+
+        function toggleMobileMenu() {
+            const isClosed = mobileMenuSidebar.classList.contains('-translate-x-full');
+            if (isClosed) {
+                mobileMenuSidebar.classList.remove('-translate-x-full');
+                mobileMenuOverlay.classList.remove('hidden');
+                setTimeout(() => mobileMenuOverlay.classList.remove('opacity-0'), 10);
+            } else {
+                mobileMenuSidebar.classList.add('-translate-x-full');
+                mobileMenuOverlay.classList.add('opacity-0');
+                setTimeout(() => mobileMenuOverlay.classList.add('hidden'), 300);
+            }
+        }
+
+        // ----------------------------------------
         // CUSTOM CURSOR LOGIC
         // ----------------------------------------
         const cursorDot = document.getElementById('cursor-dot');
         const cursorOutline = document.getElementById('cursor-outline');
 
-        window.addEventListener('mousemove', (e) => {
-            const posX = e.clientX;
-            const posY = e.clientY;
+        // Only run custom cursor logic if device likely supports hover (not touch)
+        if (window.matchMedia("(hover: hover)").matches) {
+            window.addEventListener('mousemove', (e) => {
+                const posX = e.clientX;
+                const posY = e.clientY;
 
-            cursorDot.style.left = `${posX}px`;
-            cursorDot.style.top = `${posY}px`;
+                cursorDot.style.left = `${posX}px`;
+                cursorDot.style.top = `${posY}px`;
 
-            cursorOutline.animate({
-                left: `${posX}px`,
-                top: `${posY}px`
-            }, { duration: 500, fill: "forwards" });
-        });
+                cursorOutline.animate({
+                    left: `${posX}px`,
+                    top: `${posY}px`
+                }, { duration: 500, fill: "forwards" });
+            });
 
-        document.addEventListener('mouseout', () => {
-            cursorDot.style.opacity = 0;
-            cursorOutline.style.opacity = 0;
-        });
-        document.addEventListener('mouseover', () => {
-            cursorDot.style.opacity = 1;
-            cursorOutline.style.opacity = 1;
-        });
+            document.addEventListener('mouseout', () => {
+                cursorDot.style.opacity = 0;
+                cursorOutline.style.opacity = 0;
+            });
+            document.addEventListener('mouseover', () => {
+                cursorDot.style.opacity = 1;
+                cursorOutline.style.opacity = 1;
+            });
+        }
 
         // ----------------------------------------
         // SCROLL REVEAL ANIMATION
@@ -564,7 +622,7 @@
         // CART & TOAST NOTIFICATION LOGIC
         // ----------------------------------------
         let cartItems = 0;
-        let cartData = []; // Array untuk menyimpan data produk
+        let cartData = []; 
         const cartCountElement = document.getElementById('cart-count');
         const toastContainer = document.getElementById('toast-container');
         
@@ -579,7 +637,6 @@
             if (isClosed) {
                 cartSidebar.classList.remove('translate-x-full');
                 cartOverlay.classList.remove('hidden');
-                // Timeout singkat agar transisi CSS berjalan
                 setTimeout(() => cartOverlay.classList.remove('opacity-0'), 10);
             } else {
                 cartSidebar.classList.add('translate-x-full');
@@ -592,7 +649,6 @@
             cartItems++;
             cartCountElement.innerText = `CART [${cartItems}]`;
             
-            // Tambahkan ke array dan perbarui UI keranjang
             cartData.push({ name: itemName, price: price });
             updateCartUI();
 
@@ -602,7 +658,7 @@
 
         function updateCartUI() {
             if (cartData.length === 0) {
-                cartItemsContainer.innerHTML = '<div class="text-gray-500 font-mono text-sm uppercase text-center mt-10">Keranjang masih kosong</div>';
+                cartItemsContainer.innerHTML = '<div class="text-gray-500 font-mono text-xs md:text-sm uppercase text-center mt-10">Keranjang masih kosong</div>';
                 cartTotalElement.innerText = 'Rp 0';
                 return;
             }
@@ -615,10 +671,10 @@
                 const formattedPrice = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(item.price);
 
                 const itemHTML = `
-                    <div class="flex justify-between items-start font-mono text-sm uppercase border-b border-white/5 pb-4">
+                    <div class="flex justify-between items-start font-mono text-xs md:text-sm uppercase border-b border-white/5 pb-4">
                         <div>
                             <div class="text-white mb-1">${item.name}</div>
-                            <div class="text-gray-500 text-xs cursor-pointer hover:text-white transition-colors clickable" onclick="removeFromCart(${index})">Hapus item</div>
+                            <div class="text-gray-500 text-[10px] md:text-xs cursor-pointer hover:text-white transition-colors clickable" onclick="removeFromCart(${index})">Hapus item</div>
                         </div>
                         <div class="text-white">${formattedPrice}</div>
                     </div>
@@ -654,7 +710,6 @@
         // ----------------------------------------
         const navbar = document.getElementById('navbar');
         window.addEventListener('scroll', () => {
-            // Hanya aktifkan efek navbar menyusut saat di halaman katalog
             if (document.body.classList.contains('catalog-active')) {
                 if (window.scrollY > 50) {
                     navbar.classList.add('py-2');
