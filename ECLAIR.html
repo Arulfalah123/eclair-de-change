@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ÉCLAIR DE CHANCE | Katalog Eksklusif</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Anton', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: '#0a0a0a',
+                        accent: '#f4f4f4'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Styles for Premium Vibe */
+        body {
+            background-color: #0a0a0a;
+            color: #f4f4f4;
+            cursor: none;
+            width: 100vw;
+        }
+
+        /* View State Management */
+        body.home-active {
+            overflow: hidden; /* Mengunci scroll di halaman awal */
+        }
+        body.catalog-active {
+            overflow-x: hidden;
+            overflow-y: auto; /* Mengizinkan scroll di halaman katalog */
+        }
+
+        /* View Animation */
+        .view-section {
+            display: none;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom Cursor */
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+
+        .cursor-outline {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 9998;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s ease-out, width 0.2s, height 0.2s, border-color 0.2s;
+        }
+
+        body:hover .cursor-dot, body:hover .cursor-outline {
+            opacity: 1;
+        }
+
+        a:hover ~ .cursor-dot, button:hover ~ .cursor-dot, .product-card:hover ~ .cursor-dot, .clickable:hover ~ .cursor-dot {
+            width: 12px;
+            height: 12px;
+            background-color: transparent;
+        }
+
+        a:hover ~ .cursor-outline, button:hover ~ .cursor-outline, .product-card:hover ~ .cursor-outline, .clickable:hover ~ .cursor-outline {
+            width: 60px;
+            height: 60px;
+            border-color: white;
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        /* Marquee Animation */
+        .marquee-container {
+            overflow: hidden;
+            white-space: nowrap;
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
+            padding: 10px 0;
+            background: #000;
+        }
+
+        .marquee-content {
+            display: inline-block;
+            animation: marquee 20s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Scroll Reveal Animation */
+        .reveal {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Product Image Hover */
+        .product-img-wrapper {
+            overflow: hidden;
+            position: relative;
+            background-color: #1a1a1a; /* Fallback color jika gambar gagal render */
+        }
+        
+        .product-img {
+            transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .product-card:hover .product-img {
+            transform: scale(1.05);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #333; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        /* Toast Notification */
+        #toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background: white;
+            color: black;
+            padding: 16px 24px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            transform: translateX(120%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            border-left: 4px solid black;
+        }
+        .toast.show { transform: translateX(0); }
+    </style>
+</head>
+<body class="antialiased selection:bg-white selection:text-black home-active">
+
+    <!-- Custom Cursor Elements -->
+    <div class="cursor-dot" id="cursor-dot"></div>
+    <div class="cursor-outline" id="cursor-outline"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full top-0 z-40 bg-brand/90 backdrop-blur-md border-b border-white/10 transition-all duration-300 py-4" id="navbar">
+        <div class="max-w-[1440px] mx-auto px-6 flex justify-between items-center">
+            <div class="text-sm font-semibold tracking-widest uppercase hidden md:block">
+                <button onclick="switchView('catalog'); setTimeout(() => document.getElementById('about').scrollIntoView({behavior: 'smooth'}), 100);" class="hover:text-gray-400 transition-colors clickable uppercase">Tentang</button>
+            </div>
+            
+            <button onclick="switchView('home')" class="font-display text-2xl md:text-4xl tracking-widest text-white uppercase text-center absolute left-1/2 -translate-x-1/2 clickable">
+                Éclair de Chance
+            </button>
+
+            <div class="flex items-center gap-6">
+                <button onclick="switchView('catalog')" class="text-sm font-semibold tracking-widest uppercase hover:text-gray-400 transition-colors hidden md:block clickable">
+                    Katalog
+                </button>
+                <button onclick="toggleCart()" class="flex items-center gap-2 text-sm font-semibold tracking-widest uppercase hover:text-gray-400 transition-colors group clickable">
+                    <span id="cart-count">CART [0]</span>
+                </button>
+                <!-- Mobile Menu Button -->
+                <button class="md:hidden text-white clickable">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- VIEW 1: HOME SECTION (1 Screen Locked) -->
+    <div id="home-view" class="view-section active">
+        <header class="relative h-screen w-full flex items-center justify-center overflow-hidden">
+            <div class="absolute inset-0 z-0 bg-[#1a1a1a]">
+                <!-- Gambar Hero yang Diperbarui: Pria Kasual (Kaos Polos Gelap/Konsep Streetwear) -->
+                <img src="https://images.unsplash.com/photo-1492288991661-058aa541ff43?auto=format&fit=crop&q=80&w=1920" 
+                     onerror="this.style.opacity='0'"
+                     alt="Éclair de Chance Campaign" 
+                     class="w-full h-full object-cover opacity-60">
+                <div class="absolute inset-0 bg-gradient-to-b from-brand/20 via-brand/50 to-brand"></div>
+            </div>
+            
+            <div class="relative z-10 text-center px-4">
+                <h1 class="font-display text-6xl md:text-9xl uppercase tracking-[0.1em] text-white leading-none mb-6">
+                    Drop<br>001
+                </h1>
+                <p class="font-sans text-sm md:text-base tracking-[0.3em] uppercase text-gray-300 mb-10">
+                    Koleksi Eksklusif. Ketersediaan Terbatas.
+                </p>
+                <button onclick="switchView('catalog')" class="clickable inline-block border border-white text-white px-10 py-4 uppercase tracking-[0.2em] font-semibold hover:bg-white hover:text-black transition-colors duration-300">
+                    Masuk ke Katalog
+                </button>
+            </div>
+        </header>
+    </div>
+
+    <!-- VIEW 2: CATALOG SECTION (Scrollable) -->
+    <div id="catalog-view" class="view-section">
+        <!-- Spacer for fixed navbar -->
+        <div class="h-20"></div>
+
+        <!-- Marquee Banner -->
+        <div class="marquee-container">
+            <div class="marquee-content font-display text-2xl md:text-3xl tracking-widest text-white/80">
+                EKSKLUSIF  001 &nbsp; // &nbsp; PENGIRIMAN SELURUH DUNIA &nbsp; // &nbsp; STOK SANGAT TERBATAS &nbsp; // &nbsp; ÉCLAIR DE CHANCE &nbsp; // &nbsp; EKSKLUSIF DROP 001 &nbsp; // &nbsp; PENGIRIMAN SELURUH DUNIA &nbsp; // &nbsp; STOK SANGAT TERBATAS &nbsp; // &nbsp; ÉCLAIR DE CHANCE &nbsp; // &nbsp;
+            </div>
+        </div>
+
+        <!-- Exclusive Catalog Section -->
+        <section id="katalog" class="py-20 px-6 md:px-12 max-w-[1440px] mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-end border-b border-white/20 pb-6 mb-12 reveal">
+                <div>
+                    <h2 class="font-display text-4xl md:text-6xl uppercase tracking-wider">Katalog</h2>
+                    <p class="text-gray-400 mt-2 font-mono text-sm">MUSIM 1 / ARSIP UTAMA</p>
+                </div>
+                <div class="mt-4 md:mt-0 text-sm font-mono text-gray-400">
+                    MENAMPILKAN 6 ITEM
+                </div>
+            </div>
+
+            <!-- Product Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-16 gap-x-8">
+                
+                <!-- Product 1 -->
+                <div class="product-card group reveal cursor-pointer">
+                    <div class="product-img-wrapper aspect-[3/4] mb-6 relative flex items-center justify-center">
+                        <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&q=80&w=800" 
+                             onerror="this.style.opacity='0'"
+                             alt="Jaket Bomber Thunder" 
+                             class="product-img w-full h-full object-cover mix-blend-luminosity hover:mix-blend-normal absolute inset-0">
+                        
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button onclick="addToCart('Jaket Bomber \'Thunder\'', 2500000)" class="clickable bg-white text-black font-bold uppercase tracking-widest px-6 py-3 text-sm hover:scale-105 transition-transform">
+                                Tambah
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-start font-mono uppercase text-sm">
+                        <div>
+                            <h3 class="font-bold text-white mb-1">Jaket Bomber 'Thunder'</h3>
+                            <p class="text-gray-500">Hitam / Kulit Sintetis</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="block text-white">Rp 2.500.000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product 2 -->
+                <div class="product-card group reveal cursor-pointer delay-100">
+                    <div class="product-img-wrapper aspect-[3/4] mb-6 relative">
+                        <img src="https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=800" 
+                             onerror="this.style.opacity='0'"
+                             alt="Kaos Oversize Lucky Strike" 
+                             class="product-img w-full h-full object-cover mix-blend-luminosity hover:mix-blend-normal">
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button onclick="addToCart('Kaos Oversize \'Lucky\'', 850000)" class="clickable bg-white text-black font-bold uppercase tracking-widest px-6 py-3 text-sm hover:scale-105 transition-transform">
+                                Tambah
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-start font-mono uppercase text-sm">
+                        <div>
+                            <h3 class="font-bold text-white mb-1">Kaos 'Lucky Strike'</h3>
+                            <p class="text-gray-500">Hitam / Katun Berat</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="block text-white">Rp 850.000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product 3 -->
+                <div class="product-card group reveal cursor-pointer delay-200">
+                    <div class="product-img-wrapper aspect-[3/4] mb-6 relative">
+                        <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&q=80&w=800" 
+                             onerror="this.style.opacity='0'"
+                             alt="Celana Kargo Storm" 
+                             class="product-img w-full h-full object-cover mix-blend-luminosity hover:mix-blend-normal">
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button onclick="addToCart('Celana Kargo \'Storm\'', 1200000)" class="clickable bg-white text-black font-bold uppercase tracking-widest px-6 py-3 text-sm hover:scale-105 transition-transform">
+                                Tambah
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-start font-mono uppercase text-sm">
+                        <div>
+                            <h3 class="font-bold text-white mb-1">Celana Kargo 'Storm'</h3>
+                            <p class="text-gray-500">Hitam / Parasut</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="block text-white">Rp 1.200.000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product 4 (SOLD OUT STATE) -->
+                <div class="product-card reveal cursor-not-allowed opacity-60">
+                    <div class="product-img-wrapper aspect-[3/4] mb-6 relative">
+                        <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800" 
+                             onerror="this.style.opacity='0'"
+                             alt="Hoodie Eclipse" 
+                             class="product-img w-full h-full object-cover grayscale">
+                        
+                        <div class="absolute inset-0 bg-black/20 flex flex-col items-center justify-center backdrop-blur-[2px]">
+                            <span class="font-display text-4xl text-white tracking-widest rotate-[-15deg] border-4 border-white px-4 py-1 uppercase">HABIS</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-start font-mono uppercase text-sm">
+                        <div>
+                            <h3 class="font-bold text-white mb-1 line-through">Hoodie 'Eclipse'</h3>
+                            <p class="text-gray-500">Hitam / Fleece Tebal</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="block text-gray-500">Rp 1.500.000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product 5 -->
+                <div class="product-card group reveal cursor-pointer delay-100">
+                    <div class="product-img-wrapper aspect-[3/4] mb-6 relative">
+                        <img src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&q=80&w=800" 
+                             onerror="this.style.opacity='0'"
+                             alt="Kacamata Hitam Volt" 
+                             class="product-img w-full h-full object-cover mix-blend-luminosity hover:mix-blend-normal">
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button onclick="addToCart('Kacamata \'Volt\'', 1800000)" class="clickable bg-white text-black font-bold uppercase tracking-widest px-6 py-3 text-sm hover:scale-105 transition-transform">
+                                Tambah
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-start font-mono uppercase text-sm">
+                        <div>
+                            <h3 class="font-bold text-white mb-1">Kacamata 'Volt'</h3>
+                            <p class="text-gray-500">Hitam / Asetat</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="block text-white">Rp 1.800.000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product 6 -->
+                <div class="product-card group reveal cursor-pointer delay-200">
+                    <div class="product-img-wrapper aspect-[3/4] mb-6 relative">
+                        <img src="https://images.unsplash.com/photo-1576871337622-98d48d1cf531?auto=format&fit=crop&q=80&w=800" 
+                             onerror="this.style.opacity='0'"
+                             alt="Topi Beanie Chance" 
+                             class="product-img w-full h-full object-cover mix-blend-luminosity hover:mix-blend-normal">
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button onclick="addToCart('Beanie \'Chance\'', 450000)" class="clickable bg-white text-black font-bold uppercase tracking-widest px-6 py-3 text-sm hover:scale-105 transition-transform">
+                                Tambah
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-start font-mono uppercase text-sm">
+                        <div>
+                            <h3 class="font-bold text-white mb-1">Beanie 'Chance'</h3>
+                            <p class="text-gray-500">Hitam / Rajut</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="block text-white">Rp 450.000</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Information / Footer Area -->
+        <footer id="about" class="border-t border-white/10 mt-10 reveal">
+            <div class="max-w-[1440px] mx-auto px-6 py-20 flex flex-col md:flex-row justify-between items-start gap-12">
+                
+                <div class="md:w-1/2">
+                    <h2 class="font-display text-4xl uppercase mb-6">Tentang Éclair</h2>
+                    <p class="text-gray-400 font-sans leading-relaxed max-w-md">
+                        Lahir dari konsep kilatan keberuntungan. Kami menciptakan pakaian yang berbicara tanpa perlu berteriak. Setiap potongan dibuat dengan presisi, diproduksi dalam jumlah yang sangat terbatas untuk menjaga eksklusivitas pemakainya.
+                    </p>
+                </div>
+
+                <div class="md:w-1/2 w-full">
+                    <h3 class="font-mono text-sm font-bold uppercase tracking-widest mb-6">Akses Eksklusif</h3>
+                    <p class="text-gray-400 text-sm mb-4">Berlangganan untuk menerima kata sandi rahasia sebelum rilis katalog berikutnya.</p>
+                    <form onsubmit="event.preventDefault(); showToast('Berhasil mendaftar ke akses VIP.');" class="flex w-full max-w-md border-b border-white/30 pb-2 focus-within:border-white transition-colors">
+                        <input type="email" placeholder="ALAMAT EMAIL" required class="bg-transparent outline-none w-full text-white placeholder-gray-600 font-mono text-sm clickable">
+                        <button type="submit" class="font-mono text-sm uppercase tracking-widest hover:text-gray-400 transition-colors clickable">Gabung</button>
+                    </form>
+                </div>
+
+            </div>
+
+            <div class="border-t border-white/10 py-6 text-center">
+                <p class="font-mono text-xs text-gray-600 uppercase tracking-widest">
+                    &copy; 2026 Éclair de Chance. Hak Cipta Dilindungi.
+                </p>
+            </div>
+        </footer>
+    </div> <!-- End of Catalog View -->
+
+    <!-- Cart Sidebar & Overlay -->
+    <div id="cart-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[45] hidden opacity-0 transition-opacity duration-300 clickable" onclick="toggleCart()"></div>
+
+    <div id="cart-sidebar" class="fixed top-0 right-0 h-full w-full md:w-[400px] bg-[#0a0a0a] border-l border-white/10 z-50 transform translate-x-full transition-transform duration-300 flex flex-col">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center">
+            <h2 class="font-display text-2xl uppercase tracking-widest text-white">Keranjang</h2>
+            <button onclick="toggleCart()" class="text-gray-400 hover:text-white transition-colors clickable">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+        
+        <div id="cart-items-container" class="flex-1 overflow-y-auto p-6 flex flex-col gap-6 custom-scrollbar">
+            <div class="text-gray-500 font-mono text-sm uppercase text-center mt-10">Keranjang masih kosong</div>
+        </div>
+
+        <div class="p-6 border-t border-white/10">
+            <div class="flex justify-between items-center mb-6 font-mono text-sm uppercase text-white">
+                <span>Total</span>
+                <span id="cart-total">Rp 0</span>
+            </div>
+            <button onclick="alert('Ini adalah versi Demo. Fitur checkout akan segera hadir!'); toggleCart();" class="w-full bg-white text-black font-bold uppercase tracking-widest py-4 text-sm hover:bg-gray-200 transition-colors clickable">
+                Proses Checkout
+            </button>
+        </div>
+    </div>
+
+    <!-- Container for Toast Notifications -->
+    <div id="toast-container"></div>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // ----------------------------------------
+        // VIEW SWITCHER LOGIC
+        // ----------------------------------------
+        function switchView(viewName) {
+            const homeView = document.getElementById('home-view');
+            const catalogView = document.getElementById('catalog-view');
+            const body = document.body;
+
+            // Scroll ke atas secara instan saat pindah view
+            window.scrollTo({top: 0, behavior: 'instant'});
+
+            if (viewName === 'home') {
+                catalogView.classList.remove('active');
+                homeView.classList.add('active');
+                
+                body.classList.remove('catalog-active');
+                body.classList.add('home-active');
+            } else if (viewName === 'catalog') {
+                homeView.classList.remove('active');
+                catalogView.classList.add('active');
+                
+                body.classList.remove('home-active');
+                body.classList.add('catalog-active');
+
+                // Trigger ulang animasi 'reveal' saat masuk ke katalog
+                setTimeout(() => {
+                    document.querySelectorAll('#catalog-view .reveal').forEach(el => {
+                        el.classList.remove('active');
+                        revealObserver.observe(el);
+                    });
+                }, 100);
+            }
+        }
+
+        // ----------------------------------------
+        // CUSTOM CURSOR LOGIC
+        // ----------------------------------------
+        const cursorDot = document.getElementById('cursor-dot');
+        const cursorOutline = document.getElementById('cursor-outline');
+
+        window.addEventListener('mousemove', (e) => {
+            const posX = e.clientX;
+            const posY = e.clientY;
+
+            cursorDot.style.left = `${posX}px`;
+            cursorDot.style.top = `${posY}px`;
+
+            cursorOutline.animate({
+                left: `${posX}px`,
+                top: `${posY}px`
+            }, { duration: 500, fill: "forwards" });
+        });
+
+        document.addEventListener('mouseout', () => {
+            cursorDot.style.opacity = 0;
+            cursorOutline.style.opacity = 0;
+        });
+        document.addEventListener('mouseover', () => {
+            cursorDot.style.opacity = 1;
+            cursorOutline.style.opacity = 1;
+        });
+
+        // ----------------------------------------
+        // SCROLL REVEAL ANIMATION
+        // ----------------------------------------
+        const revealCallback = (entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        };
+
+        const revealOptions = { threshold: 0.1, rootMargin: "0px 0px -50px 0px" };
+        const revealObserver = new IntersectionObserver(revealCallback, revealOptions);
+
+        // ----------------------------------------
+        // CART & TOAST NOTIFICATION LOGIC
+        // ----------------------------------------
+        let cartItems = 0;
+        let cartData = []; // Array untuk menyimpan data produk
+        const cartCountElement = document.getElementById('cart-count');
+        const toastContainer = document.getElementById('toast-container');
+        
+        // Elemen Cart Sidebar
+        const cartOverlay = document.getElementById('cart-overlay');
+        const cartSidebar = document.getElementById('cart-sidebar');
+        const cartItemsContainer = document.getElementById('cart-items-container');
+        const cartTotalElement = document.getElementById('cart-total');
+
+        function toggleCart() {
+            const isClosed = cartSidebar.classList.contains('translate-x-full');
+            if (isClosed) {
+                cartSidebar.classList.remove('translate-x-full');
+                cartOverlay.classList.remove('hidden');
+                // Timeout singkat agar transisi CSS berjalan
+                setTimeout(() => cartOverlay.classList.remove('opacity-0'), 10);
+            } else {
+                cartSidebar.classList.add('translate-x-full');
+                cartOverlay.classList.add('opacity-0');
+                setTimeout(() => cartOverlay.classList.add('hidden'), 300);
+            }
+        }
+
+        function addToCart(itemName, price) {
+            cartItems++;
+            cartCountElement.innerText = `CART [${cartItems}]`;
+            
+            // Tambahkan ke array dan perbarui UI keranjang
+            cartData.push({ name: itemName, price: price });
+            updateCartUI();
+
+            const formattedPrice = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
+            showToast(`${itemName} ditambahkan (${formattedPrice})`);
+        }
+
+        function updateCartUI() {
+            if (cartData.length === 0) {
+                cartItemsContainer.innerHTML = '<div class="text-gray-500 font-mono text-sm uppercase text-center mt-10">Keranjang masih kosong</div>';
+                cartTotalElement.innerText = 'Rp 0';
+                return;
+            }
+
+            cartItemsContainer.innerHTML = '';
+            let total = 0;
+
+            cartData.forEach((item, index) => {
+                total += item.price;
+                const formattedPrice = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(item.price);
+
+                const itemHTML = `
+                    <div class="flex justify-between items-start font-mono text-sm uppercase border-b border-white/5 pb-4">
+                        <div>
+                            <div class="text-white mb-1">${item.name}</div>
+                            <div class="text-gray-500 text-xs cursor-pointer hover:text-white transition-colors clickable" onclick="removeFromCart(${index})">Hapus item</div>
+                        </div>
+                        <div class="text-white">${formattedPrice}</div>
+                    </div>
+                `;
+                cartItemsContainer.innerHTML += itemHTML;
+            });
+
+            cartTotalElement.innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(total);
+        }
+
+        function removeFromCart(index) {
+            cartData.splice(index, 1);
+            cartItems--;
+            cartCountElement.innerText = `CART [${cartItems}]`;
+            updateCartUI();
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerText = message;
+            toastContainer.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ----------------------------------------
+        // NAVBAR SCROLL EFFECT
+        // ----------------------------------------
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            // Hanya aktifkan efek navbar menyusut saat di halaman katalog
+            if (document.body.classList.contains('catalog-active')) {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('py-2');
+                    navbar.classList.remove('py-4');
+                } else {
+                    navbar.classList.add('py-4');
+                    navbar.classList.remove('py-2');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
