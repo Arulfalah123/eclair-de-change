@@ -868,20 +868,54 @@
             btn.classList.remove('border-white/30', 'text-gray-400');
         }
 
-        function submitOrder(e) {
-            e.preventDefault();
+        async function submitOrder(e) {
+            e.preventDefault(); // Mencegah halaman refresh
             if (!selectedSize) {
                 showToast('Pilih size terlebih dahulu!');
                 return;
             }
-            const nama = document.getElementById('co-nama').value;
-            showToast(`Pesanan ${nama} berhasil dikonfirmasi! Kami akan menghubungi kamu segera.`);
-            // Reset cart
-            cartData = [];
-            cartItems = 0;
-            cartCountElement.innerText = 'CART [0]';
-            updateCartUI();
-            setTimeout(() => switchView('catalog'), 1500);
+            // Ambil data dari input form
+            const orderData = {
+                order_id: "EC-" + Math.floor(1000 + Math.random() * 9000),
+                nama: document.getElementById('co-nama').value,
+                email: document.getElementById('co-email').value,
+                alamat: document.getElementById('co-alamat').value,
+                kodepos: document.getElementById('co-kodepos').value,
+                size: selectedSize,
+                payment: document.querySelector('input[name="payment"]:checked').value,
+                items: cartData.map(item => item.name).join(', '),
+                total: document.getElementById('checkout-total-display').innerText,
+                catatan: document.getElementById('co-catatan').value,
+                timestamp: new Date().toLocaleString('id-ID')
+            };
+            showToast("Sedang mencatat pesanan...");
+            try {
+                // KIRIM KE n8n (Link Webhook kamu)
+                const response = await fetch('https://n8n-4mybhth9sqcj.tomat.sumopod.my.id/webhook/7a3895ab-6cfc-4956-8070-b1e1e1f02c72', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+                if (response.ok) {
+                    showToast("Data tersimpan! Menghubungkan ke WA...");
+                    // Logika WhatsApp (Direct ke WA setelah data masuk sheet)
+                    const phone = "62889660237807"; // Ganti dengan nomor WA kamu
+                    const waMessage = `Halo Éclair! Saya mau konfirmasi pesanan: %0A ID: ${orderData.order_id} %0A Nama: ${orderData.nama} %0A Pesanan: ${orderData.items} %0A Total: ${orderData.total}`;
+                    setTimeout(() => {
+                        window.open(`https://wa.me/${phone}?text=${waMessage}`, '_blank');
+                        // Reset Keranjang
+                        cartData = [];
+                        cartItems = 0;
+                        updateCartUI();
+                        switchView('catalog');
+                    }, 1000);
+                } else {
+                    showToast("Server sibuk, coba lagi nanti.");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                showToast("Gagal mengirim data. Cek koneksi.");
+            }
         }
         const navbar = document.getElementById('navbar');
         window.addEventListener('scroll', () => {
